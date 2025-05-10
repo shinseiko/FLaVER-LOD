@@ -1,7 +1,5 @@
-// FLaVER-LOD.cs
-// A console tool to inject new mesh geometry into a FLVER file using Souls-compatible .obj files.
-// Usage:
-// FLaVER-LOD.exe -in wp_a_0800.flver -obj wp_a_0800_l.obj -out wp_a_0800_l.flver
+// Program.cs
+// FLaVER-LOD main entry point
 
 using System;
 using System.IO;
@@ -19,7 +17,7 @@ namespace FLaVER_LOD
                 return;
             }
 
-            string flverIn = null, objPath = null, flverOut = null;
+            string flverIn = "", objPath = "", flverOut = "";
 
             for (int i = 0; i < args.Length; i += 2)
             {
@@ -37,13 +35,18 @@ namespace FLaVER_LOD
                 }
             }
 
-            if (!File.Exists(flverIn) || !File.Exists(objPath))
+            if (string.IsNullOrWhiteSpace(flverIn) || string.IsNullOrWhiteSpace(objPath))
             {
                 Console.WriteLine("Missing input files.");
                 return;
             }
 
-            FLVER2 flver = FLVER2.Read(flverIn);
+			var flver = SoulsFile<FLVER2>.Read(flverIn);
+            if (flver == null)
+            {
+                Console.WriteLine("Failed to read FLVER2 from file: " + flverIn);
+                return;
+            }
             Console.WriteLine($"Loaded FLVER: {flverIn} with {flver.Meshes.Count} meshes");
 
             var objMeshes = ObjParser.LoadOBJ(objPath);
@@ -61,7 +64,7 @@ namespace FLaVER_LOD
             }
 
             flver.Write(flverOut);
-            Console.WriteLine($"Saved FLVER with LOD: {flverOut}");
+            Console.WriteLine($"Saved LOD FLVER: {flverOut}");
         }
     }
-} 
+}

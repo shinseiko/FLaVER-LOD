@@ -5,16 +5,15 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using SoulsFormats;
 
 public static class ObjParser
 {
     public class ObjMesh
     {
-        public List<FLVER.Vertex> Vertices = new();
-        public List<FLVER.FaceSet> FaceSets = new();
+        public List<SoulsFormats.FLVER.Vertex> Vertices = new();
+        public List<SoulsFormats.FLVER2.FaceSet> FaceSets = new();
 
-        public FLVER.BoundingBox CalculateBoundingBox()
+        public SoulsFormats.FLVER2.Mesh.BoundingBoxes CalculateBoundingBox()
         {
             var min = new System.Numerics.Vector3(float.MaxValue);
             var max = new System.Numerics.Vector3(float.MinValue);
@@ -24,7 +23,8 @@ public static class ObjParser
                 min = System.Numerics.Vector3.Min(min, v.Position);
                 max = System.Numerics.Vector3.Max(max, v.Position);
             }
-            return new FLVER.BoundingBox { Min = min, Max = max };
+
+            return new SoulsFormats.FLVER2.Mesh.BoundingBoxes { Min = min, Max = max };
         }
     }
 
@@ -38,7 +38,6 @@ public static class ObjParser
 
         using var reader = new StreamReader(path);
         string line;
-        int currentIndex = 0;
 
         while ((line = reader.ReadLine()) != null)
         {
@@ -61,42 +60,37 @@ public static class ObjParser
                     var faceVerts = new List<ushort>();
                     foreach (var part in parts[1..])
                     {
-                        if (!vertexDict.TryGetValue(part, out int index))
-                        {
-                            var indices = part.Split('/');
-                            var pos = positions[int.Parse(indices[0]) - 1];
-                            var uv = indices.Length > 1 && indices[1] != "" ? uvs[int.Parse(indices[1]) - 1] : default;
-                            var norm = indices.Length > 2 ? normals[int.Parse(indices[2]) - 1] : default;
+                        var indices = part.Split('/');
+                        System.Numerics.Vector2 uv = indices.Length > 1 && indices[1] != "" ? uvs[int.Parse(indices[1]) - 1] : System.Numerics.Vector2.Zero;
+                        var pos = positions[int.Parse(indices[0]) - 1];
+                        var norm = indices.Length > 2 ? normals[int.Parse(indices[2]) - 1] : default;
 
-                            var vert = new FLVER.Vertex();
-                            vert.Position = pos;
-                            vert.Normal = new System.Numerics.Vector4(norm, 1);
-                            vert.UVs = new List<System.Numerics.Vector3> { new(uv.X, 1 - uv.Y, 0) };
-                            vert.BoneWeights = new List<FLVER.VertexBoneWeight>();
-                            vert.Tangents = new List<System.Numerics.Vector4>();
+                        var vert = new SoulsFormats.FLVER.Vertex();
+                        vert.Position = pos;
+                        vert.Normal = norm;
+                        vert.UVs = new List<System.Numerics.Vector3> { new(uv.X, 1 - uv.Y, 0) };
+                        vert.BoneWeights = new SoulsFormats.FLVER.VertexBoneWeights();
+                        vert.Tangents = new List<System.Numerics.Vector4>();
 
-                            index = meshes[0].Vertices.Count;
-                            vertexDict[part] = index;
-                            meshes[0].Vertices.Add(vert);
-                        }
+                        int index = meshes[0].Vertices.Count;
+                        vertexDict[part] = index;
+                        meshes[0].Vertices.Add(vert);
                         faceVerts.Add((ushort)index);
                     }
 
-                    // Triangle fan mode assumed
                     for (int i = 1; i < faceVerts.Count - 1; i++)
                     {
-                        meshes[0].FaceSets.Add(new FLVER.FaceSet
+                        meshes[0].FaceSets.Add(new SoulsFormats.FLVER2.FaceSet
                         {
-                            Flags = FLVER.FaceSet.FSFlags.None,
+                            Flags = SoulsFormats.FLVER2.FaceSet.FSFlags.None,
                             CullBackfaces = true,
                             TriangleStrip = false,
-                            Indices = new List<ushort> { faceVerts[0], faceVerts[i], faceVerts[i + 1] }
+                            Indices = new List<int> { faceVerts[0], faceVerts[i], faceVerts[i + 1] }
                         });
                     }
                     break;
                 case "o":
                 case "g":
-                    // Multiple mesh support (not yet implemented)
                     break;
             }
         }
