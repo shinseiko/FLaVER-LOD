@@ -19,5 +19,8 @@ Thumbs.db
 *.nupkg
 *.tmp
 
+# Local library binaries
+libs/SoulsFormats.dll
+
 # JetBrains Rider
 .idea/
