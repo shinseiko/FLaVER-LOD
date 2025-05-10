@@ -1,0 +1,23 @@
+# Ignore Visual Studio build outputs
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.pdb
+*.cache
+*.log
+*.dbmdl
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Runtime/IDE
+*.exe
+*.dll
+*.nupkg
+*.tmp
+
+# JetBrains Rider
+.idea/

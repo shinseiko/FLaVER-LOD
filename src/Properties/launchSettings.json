@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "FLaVER-LOD": {
+      "commandName": "Project",
+      "commandLineArgs": "-in ../example/wp_a_0800.flver -obj ../example/wp_a_0800_l.obj -out ../example/wp_a_0800_l.flver",
+      "workingDirectory": "../src"
+    }
+  }
+}
